@@ -196,7 +196,7 @@ for num in range(folds):
     plt.show()
     
     print('\n'+str(num+1)+ ". accuracy : " + str(history.history.get('val_acc')[-1]*100) + ' %')
-    final_model.save('hockeyFight_model_' + str(num) + '.h5')  # creates a HDF5 file 
+    final_model.save('binary_shopliftModel' + str(num) + '.h5')  # creates a HDF5 file 
     
     
 print("\n%.2f%% (+/- %.2f%%)" % (np.mean(cvscores), np.std(cvscores)))
