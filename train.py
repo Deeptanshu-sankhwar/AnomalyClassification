@@ -6,12 +6,6 @@ import math
 import matplotlib.pyplot as plt
 import time
 
-# from tensorflow.python import *
-# from tensorflow.core.framework.graph_pb2 import*
-# from google.protobuf import descriptor as _descriptor
-# from google.protobuf.pytext import _message
-# from google
-
 maxFrames = 40
 dims = 128
 folds = 5
