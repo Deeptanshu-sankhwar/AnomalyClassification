@@ -167,9 +167,9 @@ final_model.compile(loss='binary_crossentropy', optimizer=adm, metrics=['accurac
     
 # print("\n\nFOLD : " + str(num+1))
 history = final_model.fit_generator(generate_data(path, batchSize, 'train'), 
-                                        steps_per_epoch = 28,
+                                        steps_per_epoch = 33/batchSize,
                                         validation_data = generate_data(path, batchSize, 'test'),
-                                        validation_steps= 28,
+                                        validation_steps= 19/batchSize,
                                         epochs=no_of_epochs, 
                                         verbose=1)
     # scores = final_model.evaluate_generator(generate_data(path, batchSize, num, 'test'), steps= testSteps, verbose=1)
