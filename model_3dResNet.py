@@ -208,7 +208,7 @@ def build_3d_net(model_net, num_classes, clip_length, img_size):
 
     resnet = MaxPooling3D(pool_size=(3, 1, 1), strides=(2, 1, 1), padding='same')(resnet)
 
-    # res5    全连接层原文中用的1024
+    # res5  
     resnet = bottleneck_residual(resnet, 1024, strides=(1, 1, 1), activate_before_residual=False, inflate=True)
     for _ in range(1, block_num[1]):
         if _ % 2:
@@ -217,21 +217,21 @@ def build_3d_net(model_net, num_classes, clip_length, img_size):
             resnet = bottleneck_residual(resnet, 1024, strides=(1, 1, 1), activate_before_residual=False, inflate=False)
 
     print(resnet.shape)
-    resnet = GlobalAveragePooling3D()(resnet)    # ECO作者用的GAP
+    resnet = GlobalAveragePooling3D()(resnet)    
     print(resnet.shape)
     resnet = Dropout(0.5)(resnet)
-    # 354个类别
+    
     print(resnet)
     predictions = Dense(1, activation='softmax')(resnet)
     print(predictions.shape)
-    # 最终模型
+    
     with tf.device('/cpu:0'):
         InceptionV3_Resnet3D = Model(inputs=video_input, outputs=predictions)
     print(InceptionV3_Resnet3D.summary())
     return InceptionV3_Resnet3D
 
 def build_2d_net(img_size):
-    # 输出是96*28*28
+
     base_model = Xception(include_top=False, weights='imagenet', input_shape=(img_size, img_size, 3))    # default input shape is (299, 299, 3)
 
     x = SeparableConv2D(96, (3, 3),
@@ -264,49 +264,8 @@ history = model_3d.fit_generator(generate_data(path, batchSize, 'train'),
                            shuffle=False,
                            # verbose = 1
                            )
-# cnn = Sequential()
-# cnn.add(Conv2D(64, kernel_size=3, activation='relu', input_shape=(dims, dims,3), padding='same'))
-# cnn.add(MaxPooling2D(2))
-# cnn.add(Conv2D(32, kernel_size=3, activation='relu', padding='same'))
-# cnn.add(MaxPooling2D(2))
-# cnn.add(Conv2D(16, kernel_size=3, activation='relu', padding='same'))
-# cnn.add(Conv2D(16, kernel_size=3, activation='relu', padding='same'))
-# cnn.add(MaxPooling2D(2))
-# cnn.add(Flatten())
-#     #cnn.summary()
 
-# rnn = Sequential()
-# rnn.add(GRU(64, return_sequences=True))
-# rnn.add(GRU(64))
 
-# dense = Sequential()
-# dense.add(Dense(64,activation='relu'))
-# dense.add(Dense(64,activation='relu'))
-# dense.add(Dense(1,activation='sigmoid'))
-
-# main_input = Input(shape = (maxFrames, dims, dims, 3))    #input a sequence of 40 images
-# model = TimeDistributed(cnn)(main_input)                  #this makes cnn run 40 times
-# model = rnn(model)
-# model = dense(model)
-
-# adm = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-
-# final_model = Model(inputs = main_input, outputs = model)
-# final_model.compile(loss='binary_crossentropy', optimizer=adm, metrics=['accuracy'])
-#     #final_model.summary()
-    
-    
-# # print("\n\nFOLD : " + str(num+1))
-# history = final_model.fit_generator(generate_data(path, batchSize, 'train'), 
-#                                         steps_per_epoch = 33/batchSize,
-#                                         validation_data = generate_data(path, batchSize, 'test'),
-#                                         validation_steps= 19/batchSize,
-#                                         epochs=no_of_epochs, 
-#                                         verbose=1)
-    # scores = final_model.evaluate_generator(generate_data(path, batchSize, num, 'test'), steps= testSteps, verbose=1)
-cvscores.append(history.history.get('val_acc')[-1] * 100)
-    #print(history.history.keys())
-    
 # plt.plot(history.history['loss'])
 # plt.plot(history.history['val_loss'])
 # plt.title('loss')
