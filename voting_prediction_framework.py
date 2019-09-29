@@ -48,6 +48,11 @@ def get_video_frames(src, fpv, frame_height, frame_width):
 
 path = '/media/data/vca/dataset/Shoplifting/'
 
+accuracy_sum = 0
+accuracy_2A_sum = 0
+accuracy_3A_sum = 0
+accuracy_4A_sum = 0    
+
 for j in range(5):
     model_2A = load_model('2A-FRESH/model-2A-'+str(j+1)+'FRESH.h5', custom_objects={'tf':tf})
     model_3A = load_model('3A-FRESH/model-3A-'+str(j+1)+'FRESH.h5', custom_objects={'tf':tf})
@@ -163,6 +168,12 @@ for j in range(5):
         else:
             db1.to_csv('framework-analysisVOTE.csv')
 
-    db1 = pd.DataFrame({'Video' : '  ', '2A-prob-1' : '  ', '2A-prob-2' : '  ', '3A-prob-1' : '  ', '3A-prob-2' : '  ', '4A-prob-1' : '  ', '4A-prob-2' : '  ', 'FINAL-prob-1' : '  ', 'FINAL-prob-2' : '  ', 'Prediction' : '  ', 'Accuracy' : '  ', 'Accuracy_2A' : '  ', 'Accuracy_3A' : '  ', 'Accuracy_4A' : '  '},  index = [-1])    
-    with open ('framework-analysisVOTE.csv', 'a') as f:
-        db1.to_csv(f, header = False)
+
+    accuracy_sum += count/len(listData_2A)
+    accuracy_2A_sum += count_2A/len(listData_2A)
+    accuracy_3A_sum += count_3A/len(listData_2A)
+    accuracy_4A_sum += count_4A/len(listData_2A)
+
+db1 = pd.DataFrame({'Video' : '  ', '2A-prob-1' : '  ', '2A-prob-2' : '  ', '3A-prob-1' : '  ', '3A-prob-2' : '  ', '4A-prob-1' : '  ', '4A-prob-2' : '  ', 'FINAL-prob-1' : '  ', 'FINAL-prob-2' : '  ', 'Prediction' : '  ', 'Accuracy' : str(accuracy_sum/5), 'Accuracy_2A' : str(accuracy_2A_sum/5), 'Accuracy_3A' : str(accuracy_3A_sum/5), 'Accuracy_4A' : str(accuracy_4A_sum/5)},  index = [38])    
+with open ('framework-analysisVOTE.csv', 'a') as f:
+    db1.to_csv(f, header = False)
