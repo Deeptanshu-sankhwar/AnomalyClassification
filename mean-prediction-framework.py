@@ -8,6 +8,7 @@ import random
 import pandas as pd
 from keras.layers import Reshape,Add
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 def get_video_frames(src, fpv, frame_height, frame_width):
     # print('reading video from', src)
@@ -52,6 +53,11 @@ accuracy_sum = 0
 accuracy_2A_sum = 0
 accuracy_3A_sum = 0
 accuracy_4A_sum = 0 
+x = [1, 2, 3, 4, 5]
+y = []
+y_2A = []
+y_3A = []
+y_4A = []
 
 for j in range(5):
     model_2A = load_model('2A-FRESH/model-2A-' + str(j+1) + 'FRESH.h5', custom_objects={'tf':tf})
@@ -71,10 +77,6 @@ for j in range(5):
         print(listData_2A[i])
         print(listData_3A[i])
         print(listData_4A[i])
-
-        vote2 = 0
-        vote3 = 0
-        vote4 = 0
 
         pvid_2A = path+'test/mixed_2A/' + listData_2A[i]
         pvidcv_2A = cv2.VideoCapture(pvid_2A)
@@ -146,6 +148,23 @@ for j in range(5):
     accuracy_2A_sum += count_2A/len(listData_2A)
     accuracy_3A_sum += count_3A/len(listData_2A)
     accuracy_4A_sum += count_4A/len(listData_2A)
+
+    y.append(count/len(listData_2A))
+    y_2A.append(count_2A/len(listData_2A))
+    y_3A.append(count_3A/len(listData_2A))
+    y_4A.append(count_4A/len(listData_2A))
+
+
+plt.plot(x, y, label = 'final accuracy')
+plt.plot(x, y_2A, label = '2A accuracy')
+plt.plot(x, y_3A, label = '3A accuracy')
+plt.plot(x, y_4A, label = '4A accuracy')
+plt.xlabel('Iteration of model')
+plt.ylabel('Acuuracy')
+plt.title('Accuracy of differnet models on trained iterations')
+plt.legend()
+plt.savefig('framework-analysisMEAN.png')
+
 
 db1 = pd.DataFrame({'Video' : '  ', '2A-prob-1' : '  ', '2A-prob-2' : '  ', '3A-prob-1' : '  ', '3A-prob-2' : '  ', '4A-prob-1' : '  ', '4A-prob-2' : '  ', 'MEAN-prob-1' : '  ', 'MEAN-prob-2' : '  ', 'Prediction' : '  ', 'Accuracy' : str(accuracy_sum/5), 'Accuracy_2A' : str(accuracy_2A_sum/5), 'Accuracy_3A' : str(accuracy_3A_sum/5), 'Accuracy_4A' : str(accuracy_4A_sum/5)},  index = [38])    
 with open ('framework-analysisMEAN.csv', 'a') as f:

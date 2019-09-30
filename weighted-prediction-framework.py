@@ -1,4 +1,4 @@
-#Voting Framework
+#Weighted Evaluation Framework
 from keras.models import Model, load_model
 import numpy as np
 import os
@@ -9,6 +9,11 @@ import pandas as pd
 from keras.layers import Reshape,Add
 from pathlib import Path
 import matplotlib.pyplot as plt
+
+#prone to optimisation changes
+lambda_2A = 0.345
+lambda_3A = 0.349
+lambda_4A = 0.306
 
 def get_video_frames(src, fpv, frame_height, frame_width):
     # print('reading video from', src)
@@ -52,18 +57,17 @@ path = '/media/data/vca/dataset/Shoplifting/'
 accuracy_sum = 0
 accuracy_2A_sum = 0
 accuracy_3A_sum = 0
-accuracy_4A_sum = 0
-
+accuracy_4A_sum = 0 
 x = [1, 2, 3, 4, 5]
 y = []
 y_2A = []
 y_3A = []
-y_4A = []   
+y_4A = []
 
 for j in range(5):
-    model_2A = load_model('2A-FRESH/model-2A-'+str(j+1)+'FRESH.h5', custom_objects={'tf':tf})
-    model_3A = load_model('3A-FRESH/model-3A-'+str(j+1)+'FRESH.h5', custom_objects={'tf':tf})
-    model_4A = load_model('4A-FRESH/model-4A-'+str(j+1)+'FRESH.h5', custom_objects={'tf':tf})
+    model_2A = load_model('2A-FRESH/model-2A-' + str(j+1) + 'FRESH.h5', custom_objects={'tf':tf})
+    model_3A = load_model('3A-FRESH/model-3A-' + str(j+1) + 'FRESH.h5', custom_objects={'tf':tf})
+    model_4A = load_model('4A-FRESH/model-4A-' + str(j+1) + 'FRESH.h5', custom_objects={'tf':tf})
 
     listData_2A = os.listdir(path + 'test/mixed_2A')
     listData_3A = os.listdir(path + 'test/mixed_3A')
@@ -78,10 +82,6 @@ for j in range(5):
         print(listData_2A[i])
         print(listData_3A[i])
         print(listData_4A[i])
-
-        vote2 = 0
-        vote3 = 0
-        vote4 = 0
 
         pvid_2A = path+'test/mixed_2A/' + listData_2A[i]
         pvidcv_2A = cv2.VideoCapture(pvid_2A)
@@ -101,55 +101,36 @@ for j in range(5):
         pframe_4A = pframe_4A.reshape(-1, 64, 128, 128, 3)
         res_4A = model_4A.predict(pframe_4A)[0]
 
-        res1 = [res_2A[0], res_3A[0], res_4A[0]]
-        res2 = [res_2A[1], res_3A[1], res_4A[1]]
+        res1 = (lambda_2A * res_2A[0]) + (lambda_3A * res_3A[0]) + (lambda_4A * res_4A[0]) 
+        res2 = (lambda_2A * res_2A[1]) + (lambda_3A * res_3A[1]) + (lambda_4A * res_4A[1])
 
-        if res2[0] > 0.5:
-            vote2 = 1
-            if listData_2A[i][0] == 's':
-                count_2A += 1
-        else:
-            vote2 = -1
-            if listData_2A[i][0] == 'n':
-                count_2A += 1
+        if res_2A[1] > 0.5 and listData_2A[i][0] == 's':
+            count_2A += 1
 
-        if res2[1] > 0.5:
-            vote3 = 1
-            if listData_2A[i][0] == 's':
-                count_3A += 1
-        else:
-            vote3 = -1
-            if listData_3A[i][0] == 'n':
-                count_3A += 1
+        if res_2A[1] < 0.5 and listData_2A[i][0] == 'n':
+            count_2A += 1
 
-        if res2[2] > 0.5:
-            vote4 = 1
-            if listData_2A[i][0] == 's':
-                count_4A += 1
-        else:
-            vote4 = -1
-            if listData_2A[i][0] == 'n':
-                count_4A += 1
+        if res_3A[1] > 0.5 and listData_3A[i][0] == 's':
+            count_3A += 1
 
-        vote = vote2 + vote3 + vote4
+        if res_3A[1] < 0.5 and listData_3A[i][0] == 'n':
+            count_3A += 1
 
-        if vote > 0:
+        if res_4A[1] > 0.5 and listData_4A[i][0] == 's':
+            count_4A += 1
+
+        if res_4A[1] < 0.5 and listData_4A[i][0] == 'n':
+            count_4A += 1
+
+
+        if res2 > 0.5:
             print("Shoplifting")
-            
+
             if listData_2A[i][0] == 's':
                 count += 1
 
             prediction = "Shoplifting"
-            arg = np.argmax(res2)
-            if arg == 0:
-                res = res_2A
-                print(res_2A)
-            elif arg == 1:
-                res = res_3A
-                print(res_3A)
-            else:
-                res = res_4A
-                print(res_4A)
+            print([res1, res2])
         else:
             print("Don't Worry")
 
@@ -157,23 +138,15 @@ for j in range(5):
                 count += 1
 
             prediction = "Non Shoplifting"
-            arg = np.argmax(res1)
-            if arg == 0:
-                res = res_2A
-                print(res_2A)
-            elif arg == 1:
-                res = res_3A
-                print(res_3A)
-            else:
-                res = res_4A
-                print(res_4A)
+            print([res1, res2])
 
-        db1 = pd.DataFrame({'Video' : listData_2A[i], '2A-prob-1' : str(res_2A[0]), '2A-prob-2' : str(res_2A[1]), '3A-prob-1' : str(res_3A[0]), '3A-prob-2' : str(res_3A[1]), '4A-prob-1' : str(res_4A[0]), '4A-prob-2' : str(res_4A[1]), 'FINAL-prob-1' : str(res[0]), 'FINAL-prob-2' : str(res[1]), 'Prediction' : prediction, 'Accuracy' : str(count/(i+1)), 'Accuracy_2A' : str(count_2A/(i+1)), 'Accuracy_3A' : str(count_3A/(i+1)), 'Accuracy_4A' : str(count_4A/(i+1))},  index = [i])
-        if Path("framework-analysisVOTE.csv").is_file():
-            with open ('framework-analysisVOTE.csv', 'a') as f:
+
+        db1 = pd.DataFrame({'Video' : listData_2A[i], '2A-prob-1' : str(res_2A[0]), '2A-prob-2' : str(res_2A[1]), '3A-prob-1' : str(res_3A[0]), '3A-prob-2' : str(res_3A[1]), '4A-prob-1' : str(res_4A[0]), '4A-prob-2' : str(res_4A[1]), 'FINAL-prob-1' : str(res1), 'FINAL-prob-2' : str(res2), 'Prediction' : prediction, 'Accuracy' : str(count/(i+1)), 'Accuracy_2A' : str(count_2A/(i+1)), 'Accuracy_3A' : str(count_3A/(i+1)), 'Accuracy_4A' : str(count_4A/(i+1))},  index = [i])
+        if Path("framework-analysisWEIGHTED.csv").is_file():
+            with open ('framework-analysisWEIGHTED.csv', 'a') as f:
                 db1.to_csv(f, header = False)
         else:
-            db1.to_csv('framework-analysisVOTE.csv')
+            db1.to_csv('framework-analysisWEIGHTED.csv')
 
 
     accuracy_sum += count/len(listData_2A)
@@ -195,9 +168,9 @@ plt.xlabel('Iteration of model')
 plt.ylabel('Acuuracy')
 plt.title('Accuracy of differnet models on trained iterations')
 plt.legend()
-plt.savefig('framework-analysisVOTE.png')
+plt.savefig('framework-analysisWEIGHTED.png')
 
 
 db1 = pd.DataFrame({'Video' : '  ', '2A-prob-1' : '  ', '2A-prob-2' : '  ', '3A-prob-1' : '  ', '3A-prob-2' : '  ', '4A-prob-1' : '  ', '4A-prob-2' : '  ', 'FINAL-prob-1' : '  ', 'FINAL-prob-2' : '  ', 'Prediction' : '  ', 'Accuracy' : str(accuracy_sum/5), 'Accuracy_2A' : str(accuracy_2A_sum/5), 'Accuracy_3A' : str(accuracy_3A_sum/5), 'Accuracy_4A' : str(accuracy_4A_sum/5)},  index = [38])    
-with open ('framework-analysisVOTE.csv', 'a') as f:
+with open ('framework-analysisWEIGHTED.csv', 'a') as f:
     db1.to_csv(f, header = False)

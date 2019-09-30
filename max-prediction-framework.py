@@ -1,4 +1,4 @@
-#Voting Framework
+#Maximum Prediction Framework
 from keras.models import Model, load_model
 import numpy as np
 import os
@@ -79,10 +79,6 @@ for j in range(5):
         print(listData_3A[i])
         print(listData_4A[i])
 
-        vote2 = 0
-        vote3 = 0
-        vote4 = 0
-
         pvid_2A = path+'test/mixed_2A/' + listData_2A[i]
         pvidcv_2A = cv2.VideoCapture(pvid_2A)
         _,pframe_2A = get_video_frames(pvid_2A, 64, 128, 128)
@@ -104,76 +100,59 @@ for j in range(5):
         res1 = [res_2A[0], res_3A[0], res_4A[0]]
         res2 = [res_2A[1], res_3A[1], res_4A[1]]
 
+        index = np.argmax(res2) #giving preference to sholift prediction
+
         if res2[0] > 0.5:
-            vote2 = 1
             if listData_2A[i][0] == 's':
                 count_2A += 1
         else:
-            vote2 = -1
             if listData_2A[i][0] == 'n':
                 count_2A += 1
 
         if res2[1] > 0.5:
-            vote3 = 1
             if listData_2A[i][0] == 's':
                 count_3A += 1
         else:
-            vote3 = -1
             if listData_3A[i][0] == 'n':
                 count_3A += 1
 
         if res2[2] > 0.5:
-            vote4 = 1
             if listData_2A[i][0] == 's':
                 count_4A += 1
         else:
-            vote4 = -1
             if listData_2A[i][0] == 'n':
                 count_4A += 1
 
-        vote = vote2 + vote3 + vote4
-
-        if vote > 0:
+        
+        if res2[index] > 0.5:
             print("Shoplifting")
-            
-            if listData_2A[i][0] == 's':
-                count += 1
-
             prediction = "Shoplifting"
-            arg = np.argmax(res2)
-            if arg == 0:
-                res = res_2A
-                print(res_2A)
-            elif arg == 1:
-                res = res_3A
-                print(res_3A)
-            else:
-                res = res_4A
-                print(res_4A)
+            if listData_2A[i][0] =='s':
+                count += 1
         else:
             print("Don't Worry")
-
+            prediction = "Non Shoplifting"
             if listData_2A[i][0] == 'n':
                 count += 1
 
-            prediction = "Non Shoplifting"
-            arg = np.argmax(res1)
-            if arg == 0:
-                res = res_2A
-                print(res_2A)
-            elif arg == 1:
-                res = res_3A
-                print(res_3A)
-            else:
-                res = res_4A
-                print(res_4A)
+        if index == 0:
+            print(res_2A)
+            res = res_2A
+        elif index == 1:
+            print(res_3A)
+            res = res_3A
+        else:
+            print(res_4A)
+            res = res_4A
 
+
+        
         db1 = pd.DataFrame({'Video' : listData_2A[i], '2A-prob-1' : str(res_2A[0]), '2A-prob-2' : str(res_2A[1]), '3A-prob-1' : str(res_3A[0]), '3A-prob-2' : str(res_3A[1]), '4A-prob-1' : str(res_4A[0]), '4A-prob-2' : str(res_4A[1]), 'FINAL-prob-1' : str(res[0]), 'FINAL-prob-2' : str(res[1]), 'Prediction' : prediction, 'Accuracy' : str(count/(i+1)), 'Accuracy_2A' : str(count_2A/(i+1)), 'Accuracy_3A' : str(count_3A/(i+1)), 'Accuracy_4A' : str(count_4A/(i+1))},  index = [i])
-        if Path("framework-analysisVOTE.csv").is_file():
-            with open ('framework-analysisVOTE.csv', 'a') as f:
+        if Path("framework-analysisMAX.csv").is_file():
+            with open ('framework-analysisMAX.csv', 'a') as f:
                 db1.to_csv(f, header = False)
         else:
-            db1.to_csv('framework-analysisVOTE.csv')
+            db1.to_csv('framework-analysisMAX.csv')
 
 
     accuracy_sum += count/len(listData_2A)
@@ -195,9 +174,9 @@ plt.xlabel('Iteration of model')
 plt.ylabel('Acuuracy')
 plt.title('Accuracy of differnet models on trained iterations')
 plt.legend()
-plt.savefig('framework-analysisVOTE.png')
+plt.savefig('framework-analysisMAX.png')
 
 
 db1 = pd.DataFrame({'Video' : '  ', '2A-prob-1' : '  ', '2A-prob-2' : '  ', '3A-prob-1' : '  ', '3A-prob-2' : '  ', '4A-prob-1' : '  ', '4A-prob-2' : '  ', 'FINAL-prob-1' : '  ', 'FINAL-prob-2' : '  ', 'Prediction' : '  ', 'Accuracy' : str(accuracy_sum/5), 'Accuracy_2A' : str(accuracy_2A_sum/5), 'Accuracy_3A' : str(accuracy_3A_sum/5), 'Accuracy_4A' : str(accuracy_4A_sum/5)},  index = [38])    
-with open ('framework-analysisVOTE.csv', 'a') as f:
+with open ('framework-analysisMAX.csv', 'a') as f:
     db1.to_csv(f, header = False)
